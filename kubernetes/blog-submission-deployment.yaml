@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-submission
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blog-submission
+  template:
+    metadata:
+      labels:
+        app: blog-submission
+    spec:
+      containers:
+      - name: blog-submission
+        image: blog-submission:latest
+        ports:
+        - containerPort: 3000

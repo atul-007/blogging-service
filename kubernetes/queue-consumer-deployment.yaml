@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: queue-consumer
+  template:
+    metadata:
+      labels:
+        app: queue-consumer
+    spec:
+      containers:
+      - name: queue-consumer
+        image: queue-consumer:latest
