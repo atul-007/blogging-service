@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  blog-submission:
+    build: ./blog-submission
+    ports:
+      - "3000:3000"
+    depends_on:
+      - queue
+
+  queue:
+    build: ./queue
+    ports:
+      - "3001:3001"
+
+  queue-consumer:
+    build: ./queue-consumer
+    depends_on:
+      - queue
+      - elasticsearch
+
+  search-api:
+    build: ./search-api
+    ports:
+      - "3002:3002"
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+volumes:
+  esdata:
