@@ -14,6 +14,20 @@ type Blog struct {
 	UserID string `json:"user_id"`
 }
 
+const (
+	elasticsearchURL = "http://elasticsearch:9200"
+	indexName        = "blogs"
+	mapping          = `{
+		"mappings": {
+			"properties": {
+				"title": { "type": "text" },
+				"text": { "type": "text" },
+				"user_id": { "type": "keyword" }
+			}
+		}
+	}`
+)
+
 func main() {
 	for {
 		resp, err := http.Get("http://queue:3001/dequeue")
@@ -42,7 +56,7 @@ func main() {
 			continue
 		}
 
-		req, err := http.NewRequest("POST", "http://elasticsearch:9200/blogs/_doc", bytes.NewBuffer(blogJSON))
+		req, err := http.NewRequest("POST", elasticsearchURL+"/"+indexName+"/_doc", bytes.NewBuffer(blogJSON))
 		if err != nil {
 			log.Println("Error creating request:", err)
 			time.Sleep(1 * time.Second)
