@@ -17,7 +17,23 @@ type Blog struct {
 	UserID string `json:"user_id"`
 }
 
+const (
+	elasticsearchURL = "http://elasticsearch:9200"
+	indexName        = "blogs"
+	mapping          = `{
+		"mappings": {
+			"properties": {
+				"title": { "type": "text" },
+				"text": { "type": "text" },
+				"user_id": { "type": "keyword" }
+			}
+		}
+	}`
+)
+
 func main() {
+	createIndex()
+
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{"kafka:9092"},
 		Topic:    "blog-submissions",
@@ -46,7 +62,7 @@ func main() {
 			continue
 		}
 
-		req, err := http.NewRequest("POST", "http://elasticsearch:9200/blogs/_doc", bytes.NewBuffer(blogJSON))
+		req, err := http.NewRequest("POST", elasticsearchURL+"/"+indexName+"/_doc", bytes.NewBuffer(blogJSON))
 		if err != nil {
 			log.Println("Error creating request:", err)
 			continue
@@ -57,5 +73,27 @@ func main() {
 		if err != nil {
 			log.Println("Error sending request:", err)
 		}
+	}
+}
+
+func createIndex() {
+	req, err := http.NewRequest("PUT", elasticsearchURL+"/"+indexName, bytes.NewBuffer([]byte(mapping)))
+	if err != nil {
+		log.Println("Error creating request:", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println("Error creating index:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		log.Println("Error creating index, status code:", resp.StatusCode)
+	} else {
+		log.Println("Index created or already exists")
 	}
 }
